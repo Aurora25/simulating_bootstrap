@@ -2,7 +2,9 @@ from typing import Iterable, Any, Dict
 
 import numpy as np
 
-def assure_np_matrix(sample: Iterable):
+__author__ = "Sanja Stegerer"
+
+def _assure_np_matrix(sample: Iterable):
     """
     Make sure the given sample is in numpy matrix format:
 
@@ -18,7 +20,8 @@ def assure_np_matrix(sample: Iterable):
     else:
         return sample
 
-def bootstrap_sample(sample: np.array, resample_size: int):
+
+def _bootstrap_sample(sample: np.array, resample_size: int):
     """
     Create one bootstrap sample.
     For multiindex the expected input is a numpy matrix with row-wise pairs. e.g. [[1, 2], [3, 4], [5, 6]]
@@ -53,12 +56,12 @@ def bootstrap(sample: Iterable[Any], num_iter: int, resample_size: int, metrics:
         res: A list of calculated metrics for each bootstrap sample, list length == num_iter
     """
 
-    sample = assure_np_matrix(sample).transpose()
+    sample = _assure_np_matrix(sample).transpose()
 
     res = [{} for i in range(num_iter)]
 
     for b_iter in range(num_iter):
-        resample = (bootstrap_sample(sample, resample_size)
+        resample = (_bootstrap_sample(sample, resample_size)
                     .transpose()
                     )
         res[b_iter] = {metric_name: metric(resample) for metric_name, metric in metrics.items()}
