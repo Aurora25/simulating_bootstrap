@@ -4,7 +4,8 @@ import numpy as np
 
 __author__ = "Sanja Stegerer"
 
-def _assure_np_matrix(sample: Iterable):
+
+def _assure_np_matrix(sample: Iterable[Any]):
     """
     Make sure the given sample is in numpy matrix format:
 
