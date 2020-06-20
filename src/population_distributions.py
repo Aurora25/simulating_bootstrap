@@ -4,7 +4,7 @@ of an args kwargs situation.
 Each function returns a function that only needs the population size as input. This function can then be given to
 the simulation as population_function.
 """
-from typing import Callable, Iterable
+from typing import Callable, Iterable, Any
 
 import numpy as np
 
@@ -13,7 +13,7 @@ __author__ = "Sanja Stegerer"
 
 def get_population_gauss(mu: float, sigma: float) -> Callable[[int], Iterable[float]]:
     def get_pop(pop_size):
-        pop = np.array(np.random.normal(loc=mu, scale=sigma, size=pop_size))
+        pop = np.array(np.random.normal(loc=mu, scale=sigma, size=pop_size), ndmin=2)
         return pop
 
     return get_pop
@@ -21,14 +21,14 @@ def get_population_gauss(mu: float, sigma: float) -> Callable[[int], Iterable[fl
 
 def get_population_binomial(p: float, n: int = 1) -> Callable[[int], Iterable[int]]:
     def get_pop(pop_size):
-        pop = np.array(np.random.binomial(n=n, p=p, size=pop_size))
+        pop = np.array(np.random.binomial(n=n, p=p, size=pop_size), ndmin=2)
         return pop
 
     return get_pop
 
 
 def get_population_binary_classification(p_pop: float, p_pred, n_pop: int = 1, n_pred=1) \
-        -> Callable[[int], Iterable[Iterable[int], Iterable[int]]]:
+        -> Callable[[int], Iterable[Any]]:
     """
     Simulating a binary classification result.
     Args:
@@ -43,6 +43,6 @@ def get_population_binary_classification(p_pop: float, p_pred, n_pop: int = 1, n
     def get_pop(pop_size):
         pop_truth = np.random.binomial(n=n_pop, p=p_pop, size=pop_size)
         pop_pred = np.random.binomial(n=n_pred, p=p_pred, size=pop_size)
-        return np.array([pop_truth, pop_pred])
+        return np.array([pop_truth, pop_pred], ndmin=2)
 
     return get_pop

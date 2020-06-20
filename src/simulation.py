@@ -19,8 +19,10 @@ def get_population_and_metrics(simulation_function, pop_size, metric_functions: 
 
 def get_sample(pop, sample_size):
     """Drawing a random sample without replacement from the population"""
-    return pop.transpose()[np.random.choice(pop.transpose().shape[0], sample_size, replace=False), :].transpose()
-
+    return (pop.transpose()
+               [np.random.choice(pop.transpose().shape[0], sample_size, replace=False), :]
+               .transpose()
+            )
 
 def simulation(population_function, metric_functions: Dict[str, Any], num_sample_draws: int,
                conf_interval: Callable[[Iterable[Any], float], ConfidenceInterval] = confidence_interval,
