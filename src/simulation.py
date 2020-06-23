@@ -9,6 +9,20 @@ from src.bootstrap import bootstrap
 from src.confidence_intervals import confidence_interval
 
 
+def get_agg(bs_res, agg_fun, metrics: List[str]):
+    agg = {metric_name: agg_fun([int(sample[metric_name].pop_metric_in_conf) for sample in bs_res])
+           for metric_name in metrics}
+    return agg
+
+
+def get_agg_dist(bs_res, agg_fun, metrics: List[str]):
+    agg = {metric_name: agg_fun([sample[metric_name].metric_confidence.upper_bound
+                                 - sample[metric_name].metric_confidence.lower_bound
+                                 for sample in bs_res])
+           for metric_name in metrics}
+    return agg
+
+
 def get_population_and_metrics(simulation_function, pop_size, metric_functions: Dict[str, Any]):
     """simulation_function is the return value of the above get_population* functions """
     pop = simulation_function(pop_size)
@@ -19,10 +33,11 @@ def get_population_and_metrics(simulation_function, pop_size, metric_functions: 
 
 def get_sample(pop, sample_size):
     """Drawing a random sample without replacement from the population"""
-    return (pop.transpose()
-               [np.random.choice(pop.transpose().shape[0], sample_size, replace=False), :]
-               .transpose()
+    pop_t = pop.transpose()
+    return (pop_t[np.random.choice(pop_t.shape[0], sample_size, replace=False), :]
+            .transpose()
             )
+
 
 def simulation(population_function, metric_functions: Dict[str, Any], num_sample_draws: int,
                conf_interval: Callable[[Iterable[Any], float], ConfidenceInterval] = confidence_interval,
@@ -54,10 +69,11 @@ def simulation(population_function, metric_functions: Dict[str, Any], num_sample
     pop, metrics = get_population_and_metrics(population_function, pop_size=pop_size,
                                               metric_functions=metric_functions)
 
-    for i in tqdm(range(num_sample_draws)):
+    for _ in tqdm(range(num_sample_draws)):
         sample = get_sample(pop, sample_size=sample_size)
         res = bootstrap(sample, num_iter=num_bootstraps, resample_size=resample_size, metrics=metric_functions)
 
+        # TODO: This can be a function
         bs_res = {}
         for metric_name, _ in metric_functions.items():
             bs_metric_res = [single_res[metric_name] for single_res in res]

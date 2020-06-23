@@ -59,7 +59,7 @@ def bootstrap(sample: Iterable[Any], num_iter: int, resample_size: int, metrics:
 
     sample = _assure_np_matrix(sample).transpose()
 
-    res = [{} for i in range(num_iter)]
+    res = [{} for _ in range(num_iter)]
 
     for b_iter in range(num_iter):
         resample = (_bootstrap_sample(sample, resample_size)
