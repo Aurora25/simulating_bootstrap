@@ -18,12 +18,10 @@ def confidence_interval(statistics: List[Any], coverage: float = 0.95):
     Returns:
 
     """
-    sstat = sorted(statistics)
-
     alpha = 1 - coverage
 
-    lower = np.percentile(sstat, (alpha / 2) * 100)
-    upper = np.percentile(sstat, (coverage + (alpha / 2)) * 100)
+    lower = np.percentile(statistics, (alpha / 2) * 100)
+    upper = np.percentile(statistics, (coverage + (alpha / 2)) * 100)
 
     return ConfidenceInterval(lower, upper)
 
