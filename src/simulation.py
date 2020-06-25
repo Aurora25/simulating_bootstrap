@@ -38,6 +38,33 @@ def get_sample(pop, sample_size):
             .transpose()
             )
 
+def _calculate_metric_for_bootstrap_sample(res: Iterable[Dict[str, Any]], coverage: float, metrics: Dict[str, Any],
+                                           conf_interval: Callable[[Iterable[Any], float], ConfidenceInterval]
+                                           ):
+    """
+    Calculates the Confidence Interval for the given bootstrap sample `res` as well as if the population metrics
+    `metrics` lie inside the confidence interval
+
+    Args:
+        res: Result of one bootstrap. Dictionary contains the bootstrap results for the metrics we are interested in
+             as given by metric functions
+        conf_interval: function to calculate the confidence interval
+        coverage: the coverage of the confidence interval
+        metrics: the population metrics, dictionary of metric name and population metric result
+
+    Returns:
+
+    """
+    bs_res = {}
+    for metric_name in metrics:
+        # bs_metric_res = [single_res[metric_name] for single_res in res]
+        conf = conf_interval([single_res[metric_name] for single_res in res],
+                             coverage)
+        pop_metric_in_conf = True if conf.lower_bound <= metrics[metric_name] <= conf.upper_bound else False
+        bs_res[metric_name] = MetricResult(metric_confidence=conf, pop_metric_in_conf=pop_metric_in_conf)
+
+    return bs_res
+
 
 def simulation(population_function, metric_functions: Dict[str, Any], num_sample_draws: int,
                conf_interval: Callable[[Iterable[Any], float], ConfidenceInterval] = confidence_interval,
@@ -66,6 +93,8 @@ def simulation(population_function, metric_functions: Dict[str, Any], num_sample
             `metrics` is a dictionary of the population metrics.
     """
     sim_res = []
+    # Could also expect this as input, such that several simulations can run on one population. Cannot set a seed
+    # for distribution sampling
     pop, metrics = get_population_and_metrics(population_function, pop_size=pop_size,
                                               metric_functions=metric_functions)
 
@@ -73,14 +102,14 @@ def simulation(population_function, metric_functions: Dict[str, Any], num_sample
         sample = get_sample(pop, sample_size=sample_size)
         res = bootstrap(sample, num_iter=num_bootstraps, resample_size=resample_size, metrics=metric_functions)
 
-        # TODO: This can be a function
-        bs_res = {}
-        for metric_name, _ in metric_functions.items():
-            bs_metric_res = [single_res[metric_name] for single_res in res]
-            conf = conf_interval(bs_metric_res, coverage)
-            pop_metric_in_conf = True if conf.lower_bound <= metrics[metric_name] <= conf.upper_bound else False
-
-            bs_res[metric_name] = MetricResult(metric_confidence=conf, pop_metric_in_conf=pop_metric_in_conf)
+        bs_res = _calculate_metric_for_bootstrap_sample(res, conf_interval=conf_interval, coverage=coverage,
+                                                        metrics=metrics)
+        # for metric_name, _ in metric_functions.items():
+        #     bs_metric_res = [single_res[metric_name] for single_res in res]
+        #     conf = conf_interval(bs_metric_res, coverage)
+        #     pop_metric_in_conf = True if conf.lower_bound <= metrics[metric_name] <= conf.upper_bound else False
+        #
+        #     bs_res[metric_name] = MetricResult(metric_confidence=conf, pop_metric_in_conf=pop_metric_in_conf)
 
         sim_res.append(bs_res)
 
